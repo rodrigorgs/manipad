@@ -1,6 +1,6 @@
 export const PROTOCOL_VERSION = 1 as const;
 
-export type ObjectType = 'stroke' | 'text' | 'shape' | 'counter' | 'numberTile' | 'fractionBar' | 'card' | 'deck' | 'die' | 'pawn';
+export type ObjectType = 'stroke' | 'text' | 'shape' | 'counter' | 'numberTile' | 'fractionBar' | 'card' | 'deck' | 'die' | 'pawn' | 'chip' | 'image';
 export type Tool = 'select' | 'hand' | 'pencil' | 'highlighter' | 'eraser' | 'text' | 'rectangle' | 'ellipse' | 'line' | 'arrow';
 
 export interface BaseObject {
@@ -18,7 +18,9 @@ export interface CardObject extends BaseObject { type: 'card'; rank: string; sui
 export interface DeckObject extends BaseObject { type: 'deck'; cards: string[]; initialCards: string[]; }
 export interface DieObject extends BaseObject { type: 'die'; value: number; color: string; rollNonce: number; }
 export interface PawnObject extends BaseObject { type: 'pawn'; color: string; label?: string; }
-export type BoardObject = StrokeObject | TextObject | ShapeObject | CounterObject | NumberTileObject | FractionBarObject | CardObject | DeckObject | DieObject | PawnObject;
+export interface ChipObject extends BaseObject { type: 'chip'; side: 'front' | 'back'; frontText: string; backText: string; frontColor: string; backColor: string; size: number; }
+export interface ImageObject extends BaseObject { type: 'image'; src: string; width: number; height: number; alt: string; }
+export type BoardObject = StrokeObject | TextObject | ShapeObject | CounterObject | NumberTileObject | FractionBarObject | CardObject | DeckObject | DieObject | PawnObject | ChipObject | ImageObject;
 
 export interface Participant { id: string; name: string; color: string; isTutor: boolean; cursor?: { x: number; y: number }; selection: string[]; }
 export interface RoomSnapshot { version: 1; roomId: string; objects: BoardObject[]; participants: Participant[]; locked: boolean; revision: number; }
@@ -32,7 +34,8 @@ export type BoardCommand =
   | { type: 'undo' | 'redo' }
   | { type: 'rollDie'; id: string }
   | { type: 'shuffleDeck' | 'drawCard' | 'resetDeck'; id: string }
-  | { type: 'flipCard'; id: string };
+  | { type: 'flipCard'; id: string }
+  | { type: 'flipChip'; id: string };
 
 export interface ServerToClientEvents {
   snapshot: (snapshot: RoomSnapshot) => void;

@@ -8,7 +8,7 @@ const base = z.object({
 }).passthrough();
 
 export const boardObjectSchema = base.superRefine((value, ctx) => {
-  if (!['stroke','text','shape','counter','numberTile','fractionBar','card','deck','die','pawn'].includes(value.type)) {
+  if (!['stroke','text','shape','counter','numberTile','fractionBar','card','deck','die','pawn','chip','image'].includes(value.type)) {
     ctx.addIssue({ code: 'custom', message: 'Unknown object type' });
   }
 });
@@ -21,7 +21,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('clear') }), z.object({ type: z.literal('undo') }), z.object({ type: z.literal('redo') }),
   z.object({ type: z.literal('rollDie'), id: z.string() }), z.object({ type: z.literal('shuffleDeck'), id: z.string() }),
   z.object({ type: z.literal('drawCard'), id: z.string() }), z.object({ type: z.literal('resetDeck'), id: z.string() }),
-  z.object({ type: z.literal('flipCard'), id: z.string() }),
+  z.object({ type: z.literal('flipCard'), id: z.string() }), z.object({ type: z.literal('flipChip'), id: z.string() }),
 ]);
 
 export const joinSchema = z.object({

@@ -8,7 +8,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from '../src/shared/t
 import { RoomStore } from './room-store.js';
 
 const app = express(); const server = createServer(app);
-const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, { cors: { origin: true } });
+const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, { cors: { origin: true }, maxHttpBufferSize: 8_000_000 });
 const store = new RoomStore();
 app.use(express.json());
 app.get('/api/health', (_req, res) => res.json({ ok: true, rooms: store.rooms.size }));

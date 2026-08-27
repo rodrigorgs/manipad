@@ -20,6 +20,7 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
     next.objects = (command.direction === 'front' ? [...rest, ...picked] : [...picked, ...rest]).map((o, z) => ({ ...o, z, revision: next.revision }));
   } else if (command.type === 'rollDie') next.objects = next.objects.map((o) => o.id === command.id && o.type === 'die' ? { ...o, value: 1 + Math.floor(Math.random() * 6), rollNonce: o.rollNonce + 1, revision: next.revision } : o);
   else if (command.type === 'flipCard') next.objects = next.objects.map((o) => o.id === command.id && o.type === 'card' ? { ...o, faceUp: !o.faceUp, revision: next.revision } : o);
+  else if (command.type === 'flipChip') next.objects = next.objects.map((o) => o.id === command.id && o.type === 'chip' ? { ...o, side: o.side === 'front' ? 'back' : 'front', revision: next.revision } : o);
   else if (command.type === 'shuffleDeck') next.objects = next.objects.map((o) => {
     if (o.id !== command.id || o.type !== 'deck') return o;
     const cards = [...o.cards]; for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cards[i], cards[j]] = [cards[j], cards[i]]; }
@@ -31,7 +32,7 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
     if (deck?.type === 'deck' && deck.cards.length) {
       const code = deck.cards[deck.cards.length - 1]; const suits = ['♠','♥','♦','♣'] as const;
       next.objects = next.objects.map((o) => o.id === deck.id && o.type === 'deck' ? { ...o, cards: o.cards.slice(0, -1), revision: next.revision } : o);
-      next.objects.push({ id: `card-${crypto.randomUUID()}`, type: 'card', x: deck.x + 86, y: deck.y, rotation: 0, scaleX: 1, scaleY: 1, z: next.objects.length, locked: false, creator: `deck:${deck.id}`, revision: next.revision, rank: code.slice(0,-1), suit: suits[Number(code.slice(-1))] ?? '♠', faceUp: true });
+      next.objects.push({ id: `card-${crypto.randomUUID()}`, type: 'card', x: deck.x + 86, y: deck.y, rotation: 0, scaleX: 1, scaleY: 1, z: next.objects.length, locked: false, creator: `deck:${deck.id}`, revision: next.revision, rank: code.slice(0,-1), suit: suits[Number(code.slice(-1))] ?? '♠', faceUp: false });
     }
   }
   return next;

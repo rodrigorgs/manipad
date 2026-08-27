@@ -1,6 +1,6 @@
 # ManiPad
 
-ManiPad is a tablet-friendly collaborative canvas for online tutoring. It combines freehand drawing, math manipulatives, cards, dice, counters, and pawns in temporary share-by-link rooms.
+ManiPad is a tablet-friendly collaborative canvas for online tutoring. It combines freehand drawing, math manipulatives, two-sided chips, cards, dice, counters, pasted images, and pawns in temporary share-by-link rooms. Drawer objects can be tapped for collision-aware placement or dragged directly to a chosen board position.
 
 ## Run locally
 

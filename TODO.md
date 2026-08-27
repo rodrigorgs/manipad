@@ -1,0 +1,14 @@
+- [ ] The things in the "things to move" drawer should also be added to the whiteboard by dragging them
+- [ ] When adding a thing to the whiteboard by tapping it, if there is currently a thing in the whiteboard in the place where it would be inserted, it should be inserted with an offset
+- [ ] Things need to allow for more customization than currently allowed. Fraction bars could be configured (colors, numerator, denominator); number tiles could have controls to increase/decrease number of even to type a number.
+- [ ] Add a thing: dominoes
+- [ ] Add a thing: cartesian plane
+- [ ] Add a thing: grid, with variable number of rows and columns. The objects placed on top of the grid should snap to the grid's cells if their center is close enough to a cell's center. The grid can have cells of two colors, in a checkers pattern (a color can also be transparent to allow for cells with no fill).
+- [ ] Add a thing: number cards (square, stackable)
+- [ ] Add a thing: chip (a circle that can have different colors and text on each side, double-tap to flip)
+- [ ] Allow to paste images from the clipboard onto the whiteboard
+- [ ] Create a private area for each active user. It must be displayed as a bottom drawer. Users can freely drag things between the whiteboard and the private area. Things in a user's private area can't be seen by other users. A private area is represented in the whiteboard as a chest with a letter, which can changed by the chest's owner.
+- [ ] When double tapping a deck, a card must be drawn without being flipped.
+- [ ] When two cards are placed together, they should form a stack, just like the card deck.
+- [ ] When selecting a thing in the whiteboard, the menu with possible actions that can be performed on the thing must appear close to the thing.
+- [ ] There should be animations for shuffling and rolling a die.

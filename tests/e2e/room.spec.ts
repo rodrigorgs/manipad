@@ -5,8 +5,12 @@ test('creates a room and exposes the collaborative board',async({page})=>{
   await page.getByRole('button',{name:/Start a new room/i}).click(); await expect(page).toHaveURL(/\/room\//);
   await page.getByLabel('Your name').fill('Tutor'); await page.getByRole('button',{name:/Enter room/i}).click();
   await expect(page.getByText('Things to move')).toBeVisible(); await expect(page.getByText('Live')).toBeVisible();
-  await page.getByRole('button',{name:'Counter'}).click(); await page.getByRole('button',{name:'Die'}).click();
-  await expect(page.locator('canvas')).toBeVisible();
+  await page.getByRole('button',{name:/Counter/}).click(); await page.getByRole('button',{name:/Counter/}).click(); await page.getByRole('button',{name:/Die/}).click();
+  const canvas=page.locator('canvas').first();await expect(canvas).toBeVisible();await expect(page.locator('.mini-grid i')).toHaveCount(3);
+  const dots=await page.locator('.mini-grid i').evaluateAll(nodes=>nodes.map(node=>`${node.getAttribute('data-x')},${node.getAttribute('data-y')}`));expect(new Set(dots).size).toBeGreaterThan(1);
+  await page.getByRole('button',{name:/Two-sided chip/}).dragTo(canvas,{targetPosition:{x:320,y:240}});await expect(page.locator('.mini-grid i')).toHaveCount(4);
+  await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=30;canvas.height=20;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#e85c62';ctx.fillRect(0,0,30,20);canvas.toBlob(blob=>{const transfer=new DataTransfer();transfer.items.add(new File([blob!],'pasted.png',{type:'image/png'}));const event=new Event('paste',{bubbles:true});Object.defineProperty(event,'clipboardData',{value:transfer});document.body.dispatchEvent(event);},'image/png');});
+  await expect(page.locator('.mini-grid i')).toHaveCount(5);
 });
 
 test('two clients join the same room and synchronize presence',async({browser})=>{
