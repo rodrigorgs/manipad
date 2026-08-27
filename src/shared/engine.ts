@@ -1,4 +1,4 @@
-import type { BoardCommand, BoardObject } from './types.js';
+import type { BoardCommand, BoardObject, CardObject, DeckObject } from './types.js';
 
 export interface BoardState { objects: BoardObject[]; revision: number; }
 const clone = <T>(value: T): T => structuredClone(value);
@@ -27,13 +27,40 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
     return { ...o, cards, revision: next.revision };
   });
   else if (command.type === 'resetDeck') next.objects = next.objects.filter((o) => o.type !== 'card' || o.creator !== `deck:${command.id}`).map((o) => o.id === command.id && o.type === 'deck' ? { ...o, cards: [...o.initialCards], revision: next.revision } : o);
+  else if (command.type === 'mergeIntoDeck') {
+    const source = next.objects.find((o) => o.id === command.sourceId);
+    const target = next.objects.find((o) => o.id === command.targetId);
+    if (!source || !target || source.id === target.id || source.locked || target.locked || !isCardOrDeck(source) || !isCardOrDeck(target)) return state;
+    if (source.type === 'card' && target.type === 'card') {
+      const cards = [cardCode(target), cardCode(source)];
+      const deck: DeckObject = { id: `deck-${crypto.randomUUID()}`, type: 'deck', x: target.x, y: target.y, rotation: 0, scaleX: 1, scaleY: 1, z: Math.max(0, ...next.objects.map((o) => o.z)) + 1, locked: false, creator: actor, revision: next.revision, cards, initialCards: [...cards] };
+      next.objects = next.objects.filter((o) => o.id !== source.id && o.id !== target.id);
+      next.objects.push(deck);
+    } else if (target.type === 'deck') {
+      const cards = source.type === 'card' ? [cardCode(source)] : source.cards;
+      const returning = source.type === 'card' && source.creator === `deck:${target.id}`;
+      const initialCards = returning ? target.initialCards : [...target.initialCards, ...(source.type === 'card' ? cards : source.initialCards)];
+      next.objects = next.objects.filter((o) => o.id !== source.id).map((o) => o.id === target.id && o.type === 'deck' ? { ...o, cards: [...o.cards, ...cards], initialCards, revision: next.revision } : o);
+    } else if (source.type === 'deck' && target.type === 'card') {
+      const code = cardCode(target); const returning = target.creator === `deck:${source.id}`;
+      next.objects = next.objects.filter((o) => o.id !== target.id).map((o) => o.id === source.id && o.type === 'deck' ? { ...o, x: target.x, y: target.y, cards: [...o.cards, code], initialCards: returning ? o.initialCards : [...o.initialCards, code], revision: next.revision } : o);
+    }
+  }
   else if (command.type === 'drawCard') {
     const deck = next.objects.find((o) => o.id === command.id && o.type === 'deck');
     if (deck?.type === 'deck' && deck.cards.length) {
       const code = deck.cards[deck.cards.length - 1]; const suits = ['♠','♥','♦','♣'] as const;
-      next.objects = next.objects.map((o) => o.id === deck.id && o.type === 'deck' ? { ...o, cards: o.cards.slice(0, -1), revision: next.revision } : o);
-      next.objects.push({ id: `card-${crypto.randomUUID()}`, type: 'card', x: deck.x + 86, y: deck.y, rotation: 0, scaleX: 1, scaleY: 1, z: next.objects.length, locked: false, creator: `deck:${deck.id}`, revision: next.revision, rank: code.slice(0,-1), suit: suits[Number(code.slice(-1))] ?? '♠', faceUp: false });
+      const drawnCount = next.objects.filter((o) => o.type === 'card' && o.creator === `deck:${deck.id}`).length;
+      const landing = { x: deck.x + 86 + (drawnCount % 4) * 82, y: deck.y + Math.floor(drawnCount / 4) * 106 };
+      next.objects = next.objects.map((o) => {
+        if (o.id === deck.id && o.type === 'deck') return { ...o, cards: o.cards.slice(0, -1), revision: next.revision };
+        return o;
+      });
+      next.objects.push({ id: `card-${crypto.randomUUID()}`, type: 'card', x: landing.x, y: landing.y, rotation: 0, scaleX: 1, scaleY: 1, z: next.objects.length, locked: false, creator: `deck:${deck.id}`, revision: next.revision, rank: code.slice(0,-1), suit: suits[Number(code.slice(-1))] ?? '♠', faceUp: false });
     }
   }
   return next;
 }
+
+function isCardOrDeck(object: BoardObject): object is CardObject | DeckObject { return object.type === 'card' || object.type === 'deck'; }
+function cardCode(card: CardObject) { const suits = ['♠','♥','♦','♣'] as const; return `${card.rank}${suits.indexOf(card.suit)}`; }

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('creates a room and exposes the collaborative board',async({page})=>{
+test('creates a room and exposes the collaborative board',async({page},testInfo)=>{
   await page.goto('/'); await expect(page.getByRole('heading',{name:/Explain it/i})).toBeVisible();
   await page.getByRole('button',{name:/Start a new room/i}).click(); await expect(page).toHaveURL(/\/room\//);
   await page.getByLabel('Your name').fill('Tutor'); await page.getByRole('button',{name:/Enter room/i}).click();
@@ -11,6 +11,14 @@ test('creates a room and exposes the collaborative board',async({page})=>{
   await page.getByRole('button',{name:/Two-sided chip/}).dragTo(canvas,{targetPosition:{x:320,y:240}});await expect(page.locator('.mini-grid i')).toHaveCount(4);
   await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=30;canvas.height=20;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#e85c62';ctx.fillRect(0,0,30,20);canvas.toBlob(blob=>{const transfer=new DataTransfer();transfer.items.add(new File([blob!],'pasted.png',{type:'image/png'}));const event=new Event('paste',{bubbles:true});Object.defineProperty(event,'clipboardData',{value:transfer});document.body.dispatchEvent(event);},'image/png');});
   await expect(page.locator('.mini-grid i')).toHaveCount(5);
+  await page.getByRole('button',{name:/Card deck/}).click();await expect(page.locator('.mini-grid i')).toHaveCount(6);
+  const deck=await page.locator('.mini-grid i').last().evaluate(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))}));
+  await canvas.dblclick({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(7);await page.waitForTimeout(500);await canvas.dblclick({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(8);
+  const cards=await page.locator('.mini-grid i[data-type="card"]').evaluateAll(nodes=>nodes.map(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))})));expect(cards).toHaveLength(2);
+  if(testInfo.project.name==='desktop'){
+    await page.getByRole('button',{name:/Things/}).click();const box=await canvas.boundingBox();expect(box).not.toBeNull();await page.mouse.move(box!.x+cards[1].x,box!.y+cards[1].y);await page.mouse.down();await page.mouse.move(box!.x+cards[0].x,box!.y+cards[0].y,{steps:8});await page.mouse.up();
+    await expect(page.locator('.mini-grid i')).toHaveCount(7);await expect(page.locator('.mini-grid i[data-type="deck"][data-count="2"]')).toHaveCount(1);
+  }
 });
 
 test('two clients join the same room and synchronize presence',async({browser})=>{

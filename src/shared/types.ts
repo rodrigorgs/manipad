@@ -6,7 +6,7 @@ export type Tool = 'select' | 'hand' | 'pencil' | 'highlighter' | 'eraser' | 'te
 export interface BaseObject {
   id: string; type: ObjectType; x: number; y: number; rotation: number;
   scaleX: number; scaleY: number; z: number; locked: boolean;
-  creator: string; revision: number; stackId?: string; stackOrder?: number;
+  creator: string; revision: number;
 }
 export interface StrokeObject extends BaseObject { type: 'stroke'; points: number[]; color: string; width: number; opacity: number; }
 export interface TextObject extends BaseObject { type: 'text'; text: string; color: string; fontSize: number; width: number; }
@@ -34,6 +34,7 @@ export type BoardCommand =
   | { type: 'undo' | 'redo' }
   | { type: 'rollDie'; id: string }
   | { type: 'shuffleDeck' | 'drawCard' | 'resetDeck'; id: string }
+  | { type: 'mergeIntoDeck'; sourceId: string; targetId: string }
   | { type: 'flipCard'; id: string }
   | { type: 'flipChip'; id: string };
 
