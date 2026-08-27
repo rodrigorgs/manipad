@@ -20,7 +20,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('reorder'), ids: z.array(z.string()).max(100), direction: z.enum(['front','back']) }),
   z.object({ type: z.literal('clear') }), z.object({ type: z.literal('undo') }), z.object({ type: z.literal('redo') }),
   z.object({ type: z.literal('rollDie'), id: z.string() }), z.object({ type: z.literal('shuffleDeck'), id: z.string() }),
-  z.object({ type: z.literal('drawCard'), id: z.string() }), z.object({ type: z.literal('resetDeck'), id: z.string() }),
+  z.object({ type: z.literal('drawCard'), id: z.string() }), z.object({ type: z.literal('drawAndFlip'), id: z.string() }), z.object({ type: z.literal('resetDeck'), id: z.string() }),
   z.object({ type: z.literal('flipDeck'), id: z.string() }),
   z.object({ type: z.literal('mergeIntoDeck'), sourceId: z.string(), targetId: z.string() }),
   z.object({ type: z.literal('flipCard'), id: z.string() }), z.object({ type: z.literal('flipChip'), id: z.string() }),

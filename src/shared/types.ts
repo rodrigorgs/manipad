@@ -33,7 +33,7 @@ export type BoardCommand =
   | { type: 'clear' }
   | { type: 'undo' | 'redo' }
   | { type: 'rollDie'; id: string }
-  | { type: 'shuffleDeck' | 'drawCard' | 'resetDeck'; id: string }
+  | { type: 'shuffleDeck' | 'drawCard' | 'drawAndFlip' | 'resetDeck'; id: string }
   | { type: 'flipDeck'; id: string }
   | { type: 'mergeIntoDeck'; sourceId: string; targetId: string }
   | { type: 'flipCard'; id: string }
