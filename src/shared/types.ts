@@ -15,7 +15,7 @@ export interface CounterObject extends BaseObject { type: 'counter'; color: stri
 export interface NumberTileObject extends BaseObject { type: 'numberTile'; value: number; color: string; }
 export interface FractionBarObject extends BaseObject { type: 'fractionBar'; parts: number; shaded: number; color: string; width: number; height: number; }
 export interface CardObject extends BaseObject { type: 'card'; rank: string; suit: '♠' | '♥' | '♦' | '♣'; faceUp: boolean; }
-export interface DeckObject extends BaseObject { type: 'deck'; cards: string[]; initialCards: string[]; }
+export interface DeckObject extends BaseObject { type: 'deck'; cards: string[]; initialCards: string[]; faceUp: boolean; }
 export interface DieObject extends BaseObject { type: 'die'; value: number; color: string; rollNonce: number; }
 export interface PawnObject extends BaseObject { type: 'pawn'; color: string; label?: string; }
 export interface ChipObject extends BaseObject { type: 'chip'; side: 'front' | 'back'; frontText: string; backText: string; frontColor: string; backColor: string; size: number; }
@@ -34,6 +34,7 @@ export type BoardCommand =
   | { type: 'undo' | 'redo' }
   | { type: 'rollDie'; id: string }
   | { type: 'shuffleDeck' | 'drawCard' | 'resetDeck'; id: string }
+  | { type: 'flipDeck'; id: string }
   | { type: 'mergeIntoDeck'; sourceId: string; targetId: string }
   | { type: 'flipCard'; id: string }
   | { type: 'flipChip'; id: string };

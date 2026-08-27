@@ -20,20 +20,21 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
     next.objects = (command.direction === 'front' ? [...rest, ...picked] : [...picked, ...rest]).map((o, z) => ({ ...o, z, revision: next.revision }));
   } else if (command.type === 'rollDie') next.objects = next.objects.map((o) => o.id === command.id && o.type === 'die' ? { ...o, value: 1 + Math.floor(Math.random() * 6), rollNonce: o.rollNonce + 1, revision: next.revision } : o);
   else if (command.type === 'flipCard') next.objects = next.objects.map((o) => o.id === command.id && o.type === 'card' ? { ...o, faceUp: !o.faceUp, revision: next.revision } : o);
+  else if (command.type === 'flipDeck') next.objects = next.objects.map((o) => o.id === command.id && o.type === 'deck' ? { ...o, cards: [...o.cards].reverse(), faceUp: !o.faceUp, revision: next.revision } : o);
   else if (command.type === 'flipChip') next.objects = next.objects.map((o) => o.id === command.id && o.type === 'chip' ? { ...o, side: o.side === 'front' ? 'back' : 'front', revision: next.revision } : o);
   else if (command.type === 'shuffleDeck') next.objects = next.objects.map((o) => {
     if (o.id !== command.id || o.type !== 'deck') return o;
     const cards = [...o.cards]; for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cards[i], cards[j]] = [cards[j], cards[i]]; }
     return { ...o, cards, revision: next.revision };
   });
-  else if (command.type === 'resetDeck') next.objects = next.objects.filter((o) => o.type !== 'card' || o.creator !== `deck:${command.id}`).map((o) => o.id === command.id && o.type === 'deck' ? { ...o, cards: [...o.initialCards], revision: next.revision } : o);
+  else if (command.type === 'resetDeck') next.objects = next.objects.filter((o) => o.type !== 'card' || o.creator !== `deck:${command.id}`).map((o) => o.id === command.id && o.type === 'deck' ? { ...o, cards: [...o.initialCards], faceUp: false, revision: next.revision } : o);
   else if (command.type === 'mergeIntoDeck') {
     const source = next.objects.find((o) => o.id === command.sourceId);
     const target = next.objects.find((o) => o.id === command.targetId);
     if (!source || !target || source.id === target.id || source.locked || target.locked || !isCardOrDeck(source) || !isCardOrDeck(target)) return state;
     if (source.type === 'card' && target.type === 'card') {
       const cards = [cardCode(target), cardCode(source)];
-      const deck: DeckObject = { id: `deck-${crypto.randomUUID()}`, type: 'deck', x: target.x, y: target.y, rotation: 0, scaleX: 1, scaleY: 1, z: Math.max(0, ...next.objects.map((o) => o.z)) + 1, locked: false, creator: actor, revision: next.revision, cards, initialCards: [...cards] };
+      const deck: DeckObject = { id: `deck-${crypto.randomUUID()}`, type: 'deck', x: target.x, y: target.y, rotation: 0, scaleX: 1, scaleY: 1, z: Math.max(0, ...next.objects.map((o) => o.z)) + 1, locked: false, creator: actor, revision: next.revision, cards, initialCards: [...cards], faceUp: source.faceUp };
       next.objects = next.objects.filter((o) => o.id !== source.id && o.id !== target.id);
       next.objects.push(deck);
     } else if (target.type === 'deck') {
@@ -56,11 +57,22 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
         if (o.id === deck.id && o.type === 'deck') return { ...o, cards: o.cards.slice(0, -1), revision: next.revision };
         return o;
       });
-      next.objects.push({ id: `card-${crypto.randomUUID()}`, type: 'card', x: landing.x, y: landing.y, rotation: 0, scaleX: 1, scaleY: 1, z: next.objects.length, locked: false, creator: `deck:${deck.id}`, revision: next.revision, rank: code.slice(0,-1), suit: suits[Number(code.slice(-1))] ?? '♠', faceUp: false });
+      next.objects.push({ id: `card-${crypto.randomUUID()}`, type: 'card', x: landing.x, y: landing.y, rotation: 0, scaleX: 1, scaleY: 1, z: next.objects.length, locked: false, creator: `deck:${deck.id}`, revision: next.revision, rank: code.slice(0,-1), suit: suits[Number(code.slice(-1))] ?? '♠', faceUp: deck.faceUp });
     }
   }
+  next.objects = normalizeDecks(next.objects, next.revision);
   return next;
 }
 
 function isCardOrDeck(object: BoardObject): object is CardObject | DeckObject { return object.type === 'card' || object.type === 'deck'; }
 function cardCode(card: CardObject) { const suits = ['♠','♥','♦','♣'] as const; return `${card.rank}${suits.indexOf(card.suit)}`; }
+function normalizeDecks(objects: BoardObject[], revision: number): BoardObject[] {
+  const suits = ['♠','♥','♦','♣'] as const;
+  return objects.flatMap((object): BoardObject[] => {
+    if (object.type !== 'deck') return [object];
+    if (object.cards.length === 0) return [];
+    if (object.cards.length > 1) return [object];
+    const code = object.cards[0];
+    return [{ id: object.id, type: 'card', x: object.x, y: object.y, rotation: object.rotation, scaleX: object.scaleX, scaleY: object.scaleY, z: object.z, locked: object.locked, creator: object.creator, revision, rank: code.slice(0, -1), suit: suits[Number(code.slice(-1))] ?? '♠', faceUp: object.faceUp }];
+  });
+}
