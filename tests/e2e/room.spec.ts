@@ -13,7 +13,7 @@ test('creates a room and exposes the collaborative board',async({page},testInfo)
   await expect(page.locator('.mini-grid i')).toHaveCount(5);
   await page.getByRole('button',{name:/Card deck/}).click();await expect(page.locator('.mini-grid i')).toHaveCount(6);
   const deck=await page.locator('.mini-grid i').last().evaluate(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))}));
-  await canvas.dblclick({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(7);await page.waitForTimeout(500);await canvas.dblclick({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(8);
+  await canvas.click({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(7);await page.waitForTimeout(250);await canvas.click({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(8);
   const cards=await page.locator('.mini-grid i[data-type="card"]').evaluateAll(nodes=>nodes.map(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))})));expect(cards).toHaveLength(2);
   if(testInfo.project.name==='desktop'){
     await page.getByRole('button',{name:/Things/}).click();const box=await canvas.boundingBox();expect(box).not.toBeNull();await page.mouse.move(box!.x+cards[1].x,box!.y+cards[1].y);await page.mouse.down();await page.mouse.move(box!.x+cards[0].x,box!.y+cards[0].y,{steps:8});await page.mouse.up();

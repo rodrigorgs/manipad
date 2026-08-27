@@ -8,7 +8,7 @@ export interface BaseObject {
   scaleX: number; scaleY: number; z: number; locked: boolean;
   creator: string; revision: number;
 }
-export interface StrokeObject extends BaseObject { type: 'stroke'; points: number[]; color: string; width: number; opacity: number; }
+export interface StrokeObject extends BaseObject { type: 'stroke'; points: number[]; color: string; width: number; opacity: number; parentImageId?: string; }
 export interface TextObject extends BaseObject { type: 'text'; text: string; color: string; fontSize: number; width: number; }
 export interface ShapeObject extends BaseObject { type: 'shape'; shapeType: 'rectangle' | 'ellipse' | 'line' | 'arrow'; width: number; height: number; fill: string; stroke: string; strokeWidth: number; }
 export interface CounterObject extends BaseObject { type: 'counter'; color: string; size: number; }
@@ -33,7 +33,8 @@ export type BoardCommand =
   | { type: 'clear' }
   | { type: 'undo' | 'redo' }
   | { type: 'rollDie'; id: string }
-  | { type: 'shuffleDeck' | 'drawCard' | 'drawAndFlip' | 'resetDeck'; id: string }
+  | { type: 'shuffleDeck' | 'drawAndFlip' | 'resetDeck'; id: string }
+  | { type: 'drawCard'; id: string; position?: { x: number; y: number } }
   | { type: 'flipDeck'; id: string }
   | { type: 'mergeIntoDeck'; sourceId: string; targetId: string }
   | { type: 'flipCard'; id: string }

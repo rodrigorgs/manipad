@@ -12,7 +12,10 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
     const safePatch = { ...command.patch } as Record<string, unknown>;
     for (const key of ['id','type','creator','revision']) delete safePatch[key];
     next.objects = next.objects.map((item) => command.ids.includes(item.id) && !item.locked ? { ...item, ...safePatch, revision: next.revision } as BoardObject : item);
-  } else if (command.type === 'delete') next.objects = next.objects.filter((item) => !command.ids.includes(item.id) || item.locked);
+  } else if (command.type === 'delete') {
+    const imageIds = new Set(next.objects.filter((item) => command.ids.includes(item.id) && item.type === 'image' && !item.locked).map((item) => item.id));
+    next.objects = next.objects.filter((item) => (!command.ids.includes(item.id) || item.locked) && !(item.type === 'stroke' && item.parentImageId && imageIds.has(item.parentImageId)));
+  }
   else if (command.type === 'clear') next.objects = [];
   else if (command.type === 'reorder') {
     const picked = next.objects.filter((o) => command.ids.includes(o.id));
@@ -52,7 +55,7 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
     if (deck?.type === 'deck' && deck.cards.length) {
       const code = deck.cards[deck.cards.length - 1]; const suits = ['♠','♥','♦','♣'] as const;
       const drawnCount = next.objects.filter((o) => o.type === 'card' && o.creator === `deck:${deck.id}`).length;
-      const landing = { x: deck.x + 86 + (drawnCount % 4) * 82, y: deck.y + Math.floor(drawnCount / 4) * 106 };
+      const landing = command.type === 'drawCard' && command.position ? command.position : { x: deck.x + 86 + (drawnCount % 4) * 82, y: deck.y + Math.floor(drawnCount / 4) * 106 };
       next.objects = next.objects.map((o) => {
         if (o.id === deck.id && o.type === 'deck') return { ...o, cards: o.cards.slice(0, -1), revision: next.revision };
         return o;
