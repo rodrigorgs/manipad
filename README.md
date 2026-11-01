@@ -1,5 +1,7 @@
 # ManiPad
 
+Contributors: see [Visão, referências e decisões](VISAO_E_DECISOES.md) (in Portuguese) for the project's direction, requirements, and decision rationale.
+
 ManiPad is a tablet-friendly collaborative canvas for online tutoring. It combines freehand drawing, math manipulatives, two-sided chips, cards, dice, counters, pasted images, and pawns in temporary share-by-link rooms. Drawer objects can be tapped for collision-aware placement or dragged directly to a chosen board position.
 
 ## Run locally
