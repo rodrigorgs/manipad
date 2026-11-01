@@ -12,7 +12,11 @@ test('creates a room and exposes the collaborative board',async({page},testInfo)
   await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=30;canvas.height=20;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#e85c62';ctx.fillRect(0,0,30,20);canvas.toBlob(blob=>{const transfer=new DataTransfer();transfer.items.add(new File([blob!],'pasted.png',{type:'image/png'}));const event=new Event('paste',{bubbles:true});Object.defineProperty(event,'clipboardData',{value:transfer});document.body.dispatchEvent(event);},'image/png');});
   await expect(page.locator('.mini-grid i')).toHaveCount(5);
   await page.getByRole('button',{name:/Card deck/}).click();await expect(page.locator('.mini-grid i')).toHaveCount(6);
-  const deck=await page.locator('.mini-grid i').last().evaluate(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))}));
+  let deck=await page.locator('.mini-grid i').last().evaluate(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))}));
+  if(testInfo.project.name==='desktop'){
+    const boardBox=await canvas.boundingBox();expect(boardBox).not.toBeNull();await page.mouse.move(boardBox!.x+deck.x,boardBox!.y+deck.y+62);await page.mouse.down();await page.mouse.move(boardBox!.x+deck.x-90,boardBox!.y+deck.y+92,{steps:8});await page.mouse.up();
+    const moved=await page.locator('.mini-grid i[data-type="deck"]').last().evaluate(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))}));expect(moved.x).toBeLessThan(deck.x-60);deck=moved;
+  }
   await canvas.click({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(7);await page.waitForTimeout(250);await canvas.click({position:deck});await expect(page.locator('.mini-grid i')).toHaveCount(8);
   const cards=await page.locator('.mini-grid i[data-type="card"]').evaluateAll(nodes=>nodes.map(node=>({x:Number(node.getAttribute('data-x')),y:Number(node.getAttribute('data-y'))})));expect(cards).toHaveLength(2);
   if(testInfo.project.name==='desktop'){

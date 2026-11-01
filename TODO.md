@@ -9,6 +9,7 @@
 
 - [ ] When the drawing (pencil) tool is selected, dragging over an object should not dragging, it should draw behind the object instead.
 - [ ] When the pencil is selected, users should be able to draw on top of a image by starting the gesture inside the image. The drawing in this case is not on the whiteboard, but on the image. When starting to draw outside the image and moving the finger to the image, the drawing will continue in the whiteboard, below the image.
+- [ ] Improve card user interaction to match playingcards.io's behavior: dragging from a deck (or tapping it) draws a card. A single tap on a card flips the card. To drag the full deck, the user must drag the indicator of number of cards, which must be placed just outside the deck. Also, tapping the indicator selects the card and opens the action menu.
 
 
 - [ ] Add a thing: grid, with variable number of rows and columns. The objects placed on top of the grid should snap to the grid's cells if their center is close enough to a cell's center. The grid can have cells of two colors, in a checkers pattern (a color can also be transparent to allow for cells with no fill).
