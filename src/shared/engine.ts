@@ -1,5 +1,5 @@
-import type { BoardCommand, BoardObject, CardObject, DeckObject } from './types.js';
-import { handOf, isPrivatizable, regionAt } from './regions.js';
+import type { BoardCommand, BoardObject, CardObject, DeckObject, RegionObject } from './types.js';
+import { handCount, handOf, isPrivatizable, regionAt, regionBounds } from './regions.js';
 import { cardFromCode, codeOfCard, isCustomCode } from './cards.js';
 import { dieSides, rollFace } from './dice.js';
 
@@ -87,6 +87,20 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
       next.objects = next.objects.filter((o) => o.id !== target.id).map((o) => o.id === source.id && o.type === 'deck' ? { ...o, x: target.x, y: target.y, cards: [...o.cards, code], initialCards: returning ? o.initialCards : [...o.initialCards, code], revision: next.revision } : o);
     }
   }
+  else if (command.type === 'dealCards') {
+    const deck = next.objects.find((o): o is DeckObject => o.id === command.id && o.type === 'deck' && !o.locked);
+    const hands = next.objects.filter((o): o is RegionObject => o.type === 'region');
+    if (deck && hands.length) {
+      // One card to each hand, in the order the hands were added, then the next round, until each has `count` or the deck runs out.
+      const cards = [...deck.cards], placed = new Map(hands.map((hand) => [hand.id, handCount(next.objects, hand)]));
+      for (let round = 0; round < command.count && cards.length; round++) for (const hand of hands) {
+        const code = cards.pop(); if (!code) break;
+        const slot = placed.get(hand.id)!; placed.set(hand.id, slot + 1);
+        next.objects.push({ id: `card-${crypto.randomUUID()}`, type: 'card', ...dealtPosition(hand, slot, isCustomCode(code)), rotation: 0, scaleX: 1, scaleY: 1, z: next.objects.length, locked: false, creator: `deck:${deck.id}`, revision: next.revision, ...cardFromCode(code), faceUp: false });
+      }
+      next.objects = next.objects.map((o) => (o.id === deck.id ? { ...deck, cards, revision: next.revision } : o));
+    }
+  }
   else if (command.type === 'drawCard' || command.type === 'drawAndFlip') {
     const deck = next.objects.find((o) => o.id === command.id && o.type === 'deck');
     if (deck?.type === 'deck' && deck.cards.length) {
@@ -104,6 +118,13 @@ export function applyCommand(state: BoardState, command: BoardCommand, actor: st
   }
   next.objects = normalizeHands(state.objects, normalizeDecks(next.objects, next.revision), next.revision);
   return next;
+}
+
+/** Dealt cards fan out from the left of the hand, overlapping, and pile up at its right edge when the row is full. */
+function dealtPosition(hand: RegionObject, slot: number, custom: boolean) {
+  const bounds = regionBounds(hand), half = custom ? 54 : 34, step = custom ? 44 : 30;
+  const x = Math.min(bounds.left + 16 + half + slot * step, bounds.right - 16 - half);
+  return { x: Math.max(bounds.left + 1, x), y: (bounds.top + bounds.bottom) / 2 };
 }
 
 function isCardOrDeck(object: BoardObject): object is CardObject | DeckObject { return object.type === 'card' || object.type === 'deck'; }

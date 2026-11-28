@@ -13,6 +13,8 @@ Each participant can keep a hand of cards that only they can see, like holding c
 3. To play a card, drag it out of your hand onto the table. It stays face down until you tap it to flip it.
 4. Anyone can put a card into someone else's hand (to deal or give a card), but only the owner — or the tutor — can take cards out of it, move it, resize it or delete it. Cards in a hand do not stack.
 
+**Dealing:** select a deck (tap the count under it) and tap **Deal…**, choose how many cards each hand gets, and **Deal**. Cards go out one per hand per round, from the top of the deck, to every hand on the board (also the hands of players who are away), face down and fanned out in each hand; dealing stops if the deck runs out, and one undo takes the whole deal back. When several people tap **My hand** with the same view, each new hand goes one row above the ones already there.
+
 If the owner leaves, their hand stays on the board (*(away)*) and remains hidden; they see it again when they come back from the same browser. The tutor can delete it, or give an empty hand to someone else (select it, then *Give to*).
 
 Privacy is enforced by the server, not just drawn: each participant receives their own snapshot, and the faces of cards in someone else's hand — as well as face-down cards and the order of every deck — are never sent to their browser. See `server/visibility.ts` and `server/permissions.ts`.

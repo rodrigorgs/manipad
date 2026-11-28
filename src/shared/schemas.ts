@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { DIE_LIMITS } from './dice.js';
 
+export const DEAL_LIMITS = { perHand: 20 } as const;
+
 const finite = z.number().finite();
 const base = z.object({
   id: z.string().min(1).max(80), type: z.string(), x: finite, y: finite,
@@ -60,6 +62,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('editDie'), id: z.string(), sides, faces: dieFaces.optional(), color: hexColor }).refine((c) => !c.faces || c.faces.length === c.sides), z.object({ type: z.literal('shuffleDeck'), id: z.string() }),
   z.object({ type: z.literal('drawCard'), id: z.string(), position: z.object({ x: finite, y: finite }).optional() }), z.object({ type: z.literal('drawAndFlip'), id: z.string() }), z.object({ type: z.literal('resetDeck'), id: z.string() }),
   z.object({ type: z.literal('flipDeck'), id: z.string() }),
+  z.object({ type: z.literal('dealCards'), id: z.string(), count: z.number().int().min(1).max(DEAL_LIMITS.perHand) }),
   z.object({ type: z.literal('mergeIntoDeck'), sourceId: z.string(), targetId: z.string() }),
   z.object({ type: z.literal('flipCard'), id: z.string() }), z.object({ type: z.literal('flipChip'), id: z.string() }),
   // ownerName/color are filled in by the server from the participant list; clients cannot set them.

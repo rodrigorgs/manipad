@@ -62,6 +62,8 @@ export type BoardCommand =
   | { type: 'editDie'; id: string; sides: number; faces?: DieFace[]; color: string }
   | { type: 'shuffleDeck' | 'drawAndFlip' | 'resetDeck'; id: string }
   | { type: 'drawCard'; id: string; position?: { x: number; y: number } }
+  /** Deals `count` cards from a deck to every hand on the board, one round at a time (one undo). */
+  | { type: 'dealCards'; id: string; count: number }
   | { type: 'flipDeck'; id: string }
   | { type: 'mergeIntoDeck'; sourceId: string; targetId: string }
   | { type: 'flipCard'; id: string }

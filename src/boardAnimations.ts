@@ -40,6 +40,8 @@ export function useBoardAnimations(stage: React.RefObject<Konva.Stage | null>, o
   /** Where each node was last shown; a node dragged here ends where it was dropped, so its own move does not replay. */
   const shown = useRef(new Map<string, Point>());
   const running = useRef(new Map<string, Konva.Tween[]>());
+  /** Dealt cards waiting on the deck for their turn to fly. */
+  const waiting = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   /** Decks this person just drew from by dragging: the card appears under their finger, it does not fly. */
   const localDraws = useRef(new Map<string, number>());
 
@@ -72,12 +74,16 @@ export function useBoardAnimations(stage: React.RefObject<Konva.Stage | null>, o
     if (!plans.length) { rememberShown(); return; }
     if (boardTooHeavyToAnimate()) { logAnimation('skip-heavy', `${plans.length}@${sceneDrawMs.toFixed(1)}ms`); rememberShown(); return; }
 
+    // Several cards drawn at once (dealing) leave the deck one after another; the whole deal stays under ~0.6 s.
+    const draws = plans.filter((p) => p.kind === 'draw').length, stagger = draws > 1 ? Math.min(45, 600 / (draws - 1)) : 0;
+    let drawIndex = 0;
     const restarted = new Set<string>();
     for (const plan of plans) {
       const target = nodes.get(plan.id), object = current.get(plan.id);
       if (!target || !object || target.isDragging()) continue;
       // An object can move and turn over in the same change: older animations of it end once, then the new ones start.
-      if (!restarted.has(plan.id)) { restarted.add(plan.id); for (const tween of running.current.get(plan.id) ?? []) tween.finish(); running.current.set(plan.id, []); }
+      if (!restarted.has(plan.id)) { restarted.add(plan.id); clearTimeout(waiting.current.get(plan.id)); for (const tween of running.current.get(plan.id) ?? []) tween.finish(); running.current.set(plan.id, []); }
+      const delay = plan.kind === 'draw' ? drawIndex++ * stagger : 0;
       const tweens: Konva.Tween[] = [];
       if ((plan.kind === 'move' || plan.kind === 'draw') && plan.from) {
         target.position(plan.from);
@@ -88,7 +94,9 @@ export function useBoardAnimations(stage: React.RefObject<Konva.Stage | null>, o
       } else if (plan.kind === 'shuffle') {
         shake(target, object.rotation);
       }
-      for (const tween of tweens) { tween.onFinish = () => { running.current.set(plan.id, (running.current.get(plan.id) ?? []).filter((t) => t !== tween)); tween.destroy(); }; tween.play(); }
+      for (const tween of tweens) tween.onFinish = () => { running.current.set(plan.id, (running.current.get(plan.id) ?? []).filter((t) => t !== tween)); tween.destroy(); };
+      const play = () => { waiting.current.delete(plan.id); for (const tween of tweens) tween.play(); };
+      if (delay) waiting.current.set(plan.id, setTimeout(play, delay)); else play();
       running.current.set(plan.id, [...(running.current.get(plan.id) ?? []), ...tweens]);
       logAnimation(plan.kind, plan.id);
     }

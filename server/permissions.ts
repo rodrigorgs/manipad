@@ -47,6 +47,9 @@ export function authorize(objects: BoardObject[], command: BoardCommand, actor: 
     }
     case 'shuffleDeck': case 'drawCard': case 'drawAndFlip':
       return guarded(find(command.id));
+    case 'dealCards':
+      if (!objects.some((o) => o.type === 'region')) return 'There are no hands to deal to. Each player can add one from Things → My hand.';
+      return guarded(find(command.id));
     case 'mergeIntoDeck': {
       const source = find(command.sourceId), target = find(command.targetId);
       if (target && regionAt(objects, target)) return 'Cards in a hand do not stack';
